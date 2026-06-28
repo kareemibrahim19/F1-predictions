@@ -644,7 +644,22 @@
 
 </main>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
+// ── FIREBASE SETUP ───────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyCGwMXHeGBxqpS2babwrU_vZlQ_ZTK7U2Y",
+  authDomain: "f1-predictions-c8d81.firebaseapp.com",
+  projectId: "f1-predictions-c8d81",
+  storageBucket: "f1-predictions-c8d81.firebasestorage.app",
+  messagingSenderId: "716851982963",
+  appId: "1:716851982963:web:36125cdc5298578d7cb006"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const stateDocRef = db.collection('f1pred').doc('shared');
+
 // ── DRIVERS ────────────────────────────────────────────────
 const F1_TEAMS = [
   { team: 'Mercedes',      drivers: ['George Russell', 'Kimi Antonelli'] },
@@ -669,11 +684,20 @@ let state = {
 };
 
 function save() {
-  localStorage.setItem('f1pred_state', JSON.stringify(state));
+  stateDocRef.set(state).catch(err => console.error('Save failed:', err));
 }
 function load() {
-  const raw = localStorage.getItem('f1pred_state');
-  if (raw) state = JSON.parse(raw);
+  // Real-time listener: fires immediately with current data, then again
+  // whenever ANYONE updates the shared document (live sync across devices).
+  stateDocRef.onSnapshot(doc => {
+    if (doc.exists) {
+      state = doc.data();
+    } else {
+      // First time ever — create the shared document
+      stateDocRef.set(state);
+    }
+    render();
+  }, err => console.error('Load failed:', err));
 }
 
 // ── SCORING ────────────────────────────────────────────────
@@ -1156,8 +1180,7 @@ window.addEventListener('DOMContentLoaded', () => {
 document.getElementById('new-player-name').addEventListener('keydown', e => { if (e.key === 'Enter') addPlayer(); });
 
 // ── BOOT ──────────────────────────────────────────────────
-load();
-render();
+load(); // render() is called automatically inside load()'s real-time listener
 </script>
 </body>
 </html>
