@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1 Predictions Championship</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏁</text></svg>">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg:        #0a0a0c;
+    --surface:   #111116;
+    --surface2:  #18181f;
+    --border:    #2a2a35;
+    --red:       #e8001d;
+    --red-dim:   #7a0010;
+    --gold:      #f5c842;
+    --gold-dim:  #7a6320;
+    --silver:    #9bb3c4;
+    --bronze:    #cd7f32;
+    --text:      #e8e8f0;
+    --muted:     #666680;
+    --green:     #2adb6e;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative;
+    padding: 2rem 2rem 0;
+    overflow: hidden;
+    background: linear-gradient(180deg, #12020a 0%, var(--bg) 100%);
+  }
+
+  .checkered-strip {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background-image: repeating-linear-gradient(
+      90deg,
+      #fff 0px, #fff 10px,
+      #000 10px, #000 20px
+    );
+  }
+
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-area h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+  }
+  .logo-area h1 span { color: var(--red); }
+  .logo-area p {
+    font-size: 0.78rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 0.4rem;
+  }
+  .tab-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 0.5rem 1.1rem;
+    border-radius: 4px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { border-color: var(--red); color: var(--text); }
+  .tab-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* ── VIEWS ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── LEADERBOARD ── */
+  .section-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .leaderboard-table th {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    padding: 0.6rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .leaderboard-table td {
+    padding: 0.9rem 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+    border-bottom: 1px solid #1a1a22;
+  }
+  .leaderboard-table tr:hover td { background: var(--surface2); }
+
+  .rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 0.8rem;
+  }
+  .rank-1 { background: var(--gold); color: #000; }
+  .rank-2 { background: var(--silver); color: #000; }
+  .rank-3 { background: var(--bronze); color: #000; }
+  .rank-other { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+  .pts-cell {
+    color: var(--gold);
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  .player-name-cell { font-family: 'Inter', sans-serif; font-weight: 500; }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+  .empty-state p { font-size: 0.9rem; }
+
+  /* ── RACE HISTORY ── */
+  .races-grid {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  /* Accordion race card */
+  .race-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .race-card.open { border-color: var(--red-dim); }
+  .race-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.2rem;
+    cursor: pointer;
+    user-select: none;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+  }
+  .race-card-header:hover { background: var(--surface2); }
+  .race-card-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  .race-card-body {
+    display: none;
+    padding: 0 1.2rem 1.2rem;
+    border-top: 1px solid var(--border);
+  }
+  .race-card.open .race-card-body { display: block; }
+  .race-chevron {
+    font-size: 0.7rem;
+    color: var(--muted);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .race-card.open .race-chevron { transform: rotate(180deg); color: var(--red); }
+  .race-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.18rem 0.55rem;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  .badge-done { background: rgba(42,219,110,0.15); color: var(--green); border: 1px solid rgba(42,219,110,0.3); }
+  .badge-pending { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+  .race-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+  }
+  .race-date {
+    font-size: 0.73rem;
+    color: var(--muted);
+  }
+  .race-result-strip {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .pos-pill {
+    padding: 0.25rem 0.7rem;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+  }
+  .pos-p1 { background: var(--gold); color: #000; }
+  .pos-p2 { background: var(--silver); color: #000; }
+  .pos-p3 { background: var(--bronze); color: #fff; }
+  .pos-p4 { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+
+  .predictions-list { display: grid; gap: 0.5rem; }
+  .prediction-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.8rem;
+    background: var(--surface2);
+    border-radius: 4px;
+    font-size: 0.83rem;
+  }
+  .prediction-row .player { font-weight: 500; }
+  .prediction-row .pts-gained { color: var(--gold); font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+
+  /* ── FORMS ── */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.8rem;
+    max-width: 560px;
+  }
+  .form-card h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.9rem;
+    margin-bottom: 1.4rem;
+    color: var(--red);
+    letter-spacing: 0.05em;
+  }
+  .form-group { margin-bottom: 1.1rem; }
+  label {
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+  input, select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.65rem 0.9rem;
+    border-radius: 4px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+  }
+  input:focus, select:focus { border-color: var(--red); }
+  input::placeholder { color: var(--muted); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.4rem;
+    border-radius: 4px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--red); color: #fff; }
+  .btn-primary:hover { background: #ff1a35; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--red); }
+  .btn-danger { background: transparent; color: var(--red); border: 1px solid var(--red-dim); font-size: 0.65rem; padding: 0.4rem 0.8rem; }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+
+  .drivers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin-bottom: 1.2rem;
+  }
+  .driver-select-group label { color: var(--text); font-size: 0.72rem; }
+
+  .pos-label {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+
+  .alert {
+    padding: 0.8rem 1rem;
+    border-radius: 4px;
+    font-size: 0.83rem;
+    margin-bottom: 1rem;
+    border-left: 3px solid;
+  }
+  .alert-success { background: #0a2c1a; border-color: var(--green); color: var(--green); }
+  .alert-error   { background: #2c0a0a; border-color: var(--red); color: #ff7a8a; }
+
+  .players-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.2rem;
+  }
+  .chip {
+    padding: 0.35rem 0.9rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .chip-remove {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1;
+    background: none;
+    border: none;
+    color: var(--muted);
+  }
+  .chip-remove:hover { color: var(--red); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex-wrap: wrap; }
+  @media (max-width: 640px) {
+    .two-col { grid-template-columns: 1fr; }
+    .drivers-grid { grid-template-columns: 1fr; }
+    main { padding: 1.2rem; }
+  }
+
+  .scoring-legend {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .score-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .score-item strong { color: var(--text); }
+
+  .top4-display {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+  }
+  .top4-slot {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.8rem 0.6rem;
+    text-align: center;
+  }
+  .top4-slot .pos { font-family: 'Orbitron', sans-serif; font-size: 0.65rem; color: var(--muted); margin-bottom: 0.3rem; }
+  .top4-slot .driver { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 600; }
+  .top4-slot.p1 { border-color: var(--gold-dim); }
+  .top4-slot.p2 { border-color: #5a6a72; }
+  .top4-slot.p3 { border-color: #6a3f15; }
+  @media (max-width: 500px) { .top4-display { grid-template-columns: 1fr 1fr; } }
+
+  .prediction-detail-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    background: var(--surface2);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-bottom: 0.4rem;
+  }
+  .prediction-detail-row .driver-pick { font-family: 'JetBrains Mono', monospace; }
+  .pts-exact { color: var(--gold); font-weight: 600; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; }
+  .pts-inlist { color: var(--silver); font-weight: 600; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; }
+  .pts-miss { color: var(--muted); font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; }
+  .pts-dnf { color: #ff7a7a; font-weight: 600; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; }
+
+  .manage-section { margin-bottom: 2rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="checkered-strip"></div>
+  <div class="header-inner">
+    <div class="logo-area">
+      <h1>F1 <span>PREDICT</span> CHAMPIONSHIP</h1>
+      <p>Prediction League · Season 2026</p>
+    </div>
+    <nav class="nav-tabs">
+      <button class="tab-btn active" onclick="showView('leaderboard')">STANDINGS</button>
+      <button class="tab-btn" onclick="showView('races')">RACES</button>
+      <button class="tab-btn" onclick="showView('predict')">PREDICT</button>
+      <button class="tab-btn" onclick="showView('host')">HOST ★</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── LEADERBOARD VIEW ── -->
+  <div id="view-leaderboard" class="view active">
+    <div class="section-title">Championship Standings</div>
+
+    <div class="scoring-legend">
+      <div class="score-item">🏆 <strong>In Top-4:</strong> +1 pt each</div>
+      <div class="score-item">🎯 <strong>Exact P1:</strong> +5 pts</div>
+      <div class="score-item">🎯 <strong>Exact P2:</strong> +4 pts</div>
+      <div class="score-item">🎯 <strong>Exact P3:</strong> +3 pts</div>
+      <div class="score-item">🎯 <strong>Exact P4:</strong> +2 pts</div>
+      <div class="score-item">💥 <strong>DNF Penalty:</strong> −1 pt</div>
+    </div>
+
+    <div id="leaderboard-container">
+      <div class="empty-state">
+        <div class="icon">🏁</div>
+        <p>No races yet. Add players and start predicting!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RACES VIEW ── -->
+  <div id="view-races" class="view">
+    <div class="section-title">Race Results & Predictions</div>
+    <div id="races-container">
+      <div class="empty-state">
+        <div class="icon">🔮</div>
+        <p>No races recorded yet.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PREDICT VIEW ── -->
+  <div id="view-predict" class="view">
+    <div class="section-title">Submit Your Prediction</div>
+    <div class="form-card">
+      <h3>TOP-4 PREDICTION</h3>
+      <div id="predict-alert"></div>
+
+      <div class="form-group">
+        <label>Your Name</label>
+        <select id="pred-player">
+          <option value="">— select player —</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Grand Prix</label>
+        <select id="pred-race">
+          <option value="">— select race —</option>
+        </select>
+      </div>
+
+      <div class="drivers-grid">
+        <div class="driver-select-group">
+          <div class="pos-label pos-p1" style="background:var(--gold);color:#000;">P1 · 5 pts</div>
+          <select id="pred-p1" onchange="updateDriverSelects()"><option value="">— select driver —</option></select>
+        </div>
+        <div class="driver-select-group">
+          <div class="pos-label pos-p2" style="background:var(--silver);color:#000;">P2 · 4 pts</div>
+          <select id="pred-p2" onchange="updateDriverSelects()"><option value="">— select driver —</option></select>
+        </div>
+        <div class="driver-select-group">
+          <div class="pos-label pos-p3" style="background:var(--bronze);color:#fff;">P3 · 3 pts</div>
+          <select id="pred-p3" onchange="updateDriverSelects()"><option value="">— select driver —</option></select>
+        </div>
+        <div class="driver-select-group">
+          <div class="pos-label pos-p4" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);">P4 · 2 pts</div>
+          <select id="pred-p4" onchange="updateDriverSelects()"><option value="">— select driver —</option></select>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="submitPrediction()">LOCK IN PREDICTION 🔒</button>
+    </div>
+  </div>
+
+  <!-- ── HOST VIEW ── -->
+  <div id="view-host" class="view">
+    <div class="section-title">Host Controls</div>
+
+    <div class="two-col">
+      <!-- Left: manage players & races -->
+      <div>
+        <div class="manage-section">
+          <div class="form-card">
+            <h3>MANAGE PLAYERS</h3>
+            <div class="form-group" style="display:flex;gap:0.6rem">
+              <input type="text" id="new-player-name" placeholder="Player name" style="flex:1">
+              <button class="btn btn-primary" onclick="addPlayer()" style="white-space:nowrap">ADD</button>
+            </div>
+            <div id="players-list" class="players-chips"></div>
+          </div>
+        </div>
+
+        <div class="manage-section">
+          <div class="form-card">
+            <h3>ADD GRAND PRIX</h3>
+            <div class="form-group">
+              <label>Race Name</label>
+              <input type="text" id="new-race-name" placeholder="e.g. Monaco Grand Prix">
+            </div>
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" id="new-race-date">
+            </div>
+            <button class="btn btn-primary" onclick="addRace()">CREATE RACE</button>
+          </div>
+        </div>
+
+        <div class="manage-section">
+          <div class="form-card">
+            <h3>MANAGE RACES</h3>
+            <div id="races-manage-list"><p style="color:var(--muted);font-size:0.82rem">No races yet.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: post race result -->
+      <div>
+        <div class="form-card">
+          <h3>POST RACE RESULT</h3>
+          <div id="result-alert"></div>
+
+          <div class="form-group">
+            <label>Grand Prix</label>
+            <select id="result-race">
+              <option value="">— select race —</option>
+            </select>
+          </div>
+
+          <div class="drivers-grid">
+            <div class="driver-select-group">
+              <div class="pos-label pos-p1" style="background:var(--gold);color:#000;">P1 Winner</div>
+              <select id="res-p1" onchange="updateResultSelects()"><option value="">— select driver —</option></select>
+            </div>
+            <div class="driver-select-group">
+              <div class="pos-label pos-p2" style="background:var(--silver);color:#000;">P2</div>
+              <select id="res-p2" onchange="updateResultSelects()"><option value="">— select driver —</option></select>
+            </div>
+            <div class="driver-select-group">
+              <div class="pos-label pos-p3" style="background:var(--bronze);color:#fff;">P3</div>
+              <select id="res-p3" onchange="updateResultSelects()"><option value="">— select driver —</option></select>
+            </div>
+            <div class="driver-select-group">
+              <div class="pos-label pos-p4" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);">P4</div>
+              <select id="res-p4" onchange="updateResultSelects()"><option value="">— select driver —</option></select>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top:1rem">
+            <label style="color:var(--red);letter-spacing:0.1em">💥 DNF Drivers <span style="color:var(--muted);font-size:0.68rem;text-transform:none;letter-spacing:0">(−1 pt penalty per predicted DNF driver)</span></label>
+            <select id="dnf-select" onchange="addDNF(this)" style="margin-top:0.5rem">
+              <option value="">— add a DNF driver —</option>
+            </select>
+            <div id="dnf-chips" style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.6rem;min-height:0"></div>
+          </div>
+
+          <button class="btn btn-primary" onclick="postResult()">POST OFFICIAL RESULT 🏁</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ── DRIVERS ────────────────────────────────────────────────
+const F1_TEAMS = [
+  { team: 'Mercedes',      drivers: ['George Russell', 'Kimi Antonelli'] },
+  { team: 'Ferrari',       drivers: ['Charles Leclerc', 'Lewis Hamilton'] },
+  { team: 'McLaren',       drivers: ['Lando Norris', 'Oscar Piastri'] },
+  { team: 'Red Bull Racing', drivers: ['Max Verstappen', 'Isack Hadjar'] },
+  { team: 'Williams',      drivers: ['Carlos Sainz Jr.', 'Alexander Albon'] },
+  { team: 'Audi',          drivers: ['Nico Hülkenberg', 'Gabriel Bortoleto'] },
+  { team: 'Aston Martin',  drivers: ['Fernando Alonso', 'Lance Stroll'] },
+  { team: 'Alpine',        drivers: ['Pierre Gasly', 'Franco Colapinto'] },
+  { team: 'Racing Bulls',  drivers: ['Liam Lawson', 'Arvid Lindblad'] },
+  { team: 'Haas',          drivers: ['Esteban Ocon', 'Oliver Bearman'] },
+  { team: 'Cadillac',      drivers: ['Sergio Pérez', 'Valtteri Bottas'] },
+];
+const ALL_DRIVERS = F1_TEAMS.flatMap(t => t.drivers);
+
+// ── STATE ──────────────────────────────────────────────────
+let state = {
+  players: [],      // [{id, name}]
+  races: [],        // [{id, name, date, result: null | {p1,p2,p3,p4,dnf:[]}}]
+  predictions: []   // [{playerId, raceId, p1, p2, p3, p4}]
+};
+
+function save() {
+  localStorage.setItem('f1pred_state', JSON.stringify(state));
+}
+function load() {
+  const raw = localStorage.getItem('f1pred_state');
+  if (raw) state = JSON.parse(raw);
+}
+
+// ── SCORING ────────────────────────────────────────────────
+function calcPoints(pred, result) {
+  if (!result) return null;
+  const positions = ['p1','p2','p3','p4'];
+  const bonuses   = { p1: 5, p2: 4, p3: 3, p4: 2 };
+  const resultSet = new Set(positions.map(p => normalize(result[p])));
+  const dnfSet    = new Set((result.dnf || []).map(normalize));
+
+  let total = 0;
+  let detail = [];
+
+  positions.forEach(pos => {
+    const driver = normalize(pred[pos]);
+    if (dnfSet.has(driver)) {
+      // DNF penalty
+      total -= 1;
+      detail.push({ pos, driver: pred[pos], type: 'dnf', pts: -1 });
+    } else if (driver === normalize(result[pos])) {
+      const pts = bonuses[pos];
+      total += pts;
+      detail.push({ pos, driver: pred[pos], type: 'exact', pts });
+    } else if (resultSet.has(driver)) {
+      total += 1;
+      detail.push({ pos, driver: pred[pos], type: 'inlist', pts: 1 });
+    } else {
+      detail.push({ pos, driver: pred[pos], type: 'miss', pts: 0 });
+    }
+  });
+
+  return { total, detail };
+}
+
+function normalize(s) { return (s || '').trim().toLowerCase(); }
+
+function totalPointsForPlayer(playerId) {
+  let pts = 0;
+  state.races.forEach(race => {
+    if (!race.result) return;
+    const pred = state.predictions.find(p => p.playerId === playerId && p.raceId === race.id);
+    if (!pred) return;
+    const sc = calcPoints(pred, race.result);
+    if (sc) pts += sc.total;
+  });
+  return pts;
+}
+
+// ── DRIVER DROPDOWNS HELPERS ───────────────────────────────
+function buildDriverOptions(selectedIds, excludeDrivers) {
+  // selectedIds: array of currently selected values in *other* selects (to hide)
+  // excludeDrivers: set of normalized driver names already picked
+  let html = '<option value="">— select driver —</option>';
+  F1_TEAMS.forEach(t => {
+    const opts = t.drivers.map(d => {
+      const disabled = excludeDrivers.has(normalize(d)) ? 'disabled style="color:var(--muted)"' : '';
+      return `<option value="${d}" ${disabled}>${d}</option>`;
+    }).join('');
+    html += `<optgroup label="${t.team}">${opts}</optgroup>`;
+  });
+  return html;
+}
+
+function updateDriverSelects() {
+  const ids = ['pred-p1','pred-p2','pred-p3','pred-p4'];
+  const values = ids.map(id => normalize(document.getElementById(id).value));
+  ids.forEach((id, i) => {
+    const sel = document.getElementById(id);
+    const current = sel.value;
+    const others = new Set(values.filter((v, j) => j !== i && v));
+    sel.innerHTML = buildDriverOptions(others, others);
+    sel.value = current; // restore selection
+  });
+}
+
+// ── DNF STATE ──────────────────────────────────────────────
+let dnfDrivers = []; // array of driver names currently tagged as DNF
+
+function addDNF(sel) {
+  const driver = sel.value;
+  if (!driver) return;
+  if (!dnfDrivers.includes(driver)) {
+    dnfDrivers.push(driver);
+    renderDNFChips();
+    renderDNFSelect();
+  }
+  sel.value = '';
+}
+
+function removeDNF(driver) {
+  dnfDrivers = dnfDrivers.filter(d => d !== driver);
+  renderDNFChips();
+  renderDNFSelect();
+}
+
+function renderDNFChips() {
+  const container = document.getElementById('dnf-chips');
+  if (!container) return;
+  container.innerHTML = dnfDrivers.map((d, i) => `
+    <div style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.3rem 0.7rem;background:rgba(232,0,29,0.15);border:1px solid var(--red-dim);border-radius:20px;font-size:0.78rem;color:#ffa0a0">
+      💥 ${d}
+      <button data-dnf="${i}" onclick="removeDNFByIndex(this.dataset.dnf)" style="background:none;border:none;cursor:pointer;color:#ffa0a0;font-size:1rem;line-height:1;padding:0;margin-left:0.1rem" title="Remove">×</button>
+    </div>`).join('');
+}
+
+function removeDNFByIndex(i) {
+  dnfDrivers.splice(parseInt(i), 1);
+  renderDNFChips();
+  renderDNFSelect();
+}
+
+function renderDNFSelect() {
+  const sel = document.getElementById('dnf-select');
+  if (!sel) return;
+  const finishers = new Set(['res-p1','res-p2','res-p3','res-p4']
+    .map(id => normalize(document.getElementById(id).value)).filter(Boolean));
+  const already = new Set(dnfDrivers.map(normalize));
+  const eligible = ALL_DRIVERS.filter(d => !finishers.has(normalize(d)) && !already.has(normalize(d)));
+  let html = '<option value="">— add a DNF driver —</option>';
+  F1_TEAMS.forEach(t => {
+    const opts = t.drivers.filter(d => !finishers.has(normalize(d)) && !already.has(normalize(d)))
+      .map(d => `<option value="${d}">${d}</option>`).join('');
+    if (opts) html += `<optgroup label="${t.team}">${opts}</optgroup>`;
+  });
+  sel.innerHTML = html;
+}
+
+function updateResultSelects() {
+  const ids = ['res-p1','res-p2','res-p3','res-p4'];
+  const values = ids.map(id => normalize(document.getElementById(id).value));
+  ids.forEach((id, i) => {
+    const sel = document.getElementById(id);
+    const current = sel.value;
+    const others = new Set(values.filter((v, j) => j !== i && v));
+    sel.innerHTML = buildDriverOptions(others, others);
+    sel.value = current;
+  });
+  // Remove any DNF drivers that are now finishers
+  const finishers = new Set(values.filter(Boolean));
+  dnfDrivers = dnfDrivers.filter(d => !finishers.has(normalize(d)));
+  renderDNFChips();
+  renderDNFSelect();
+}
+
+function initResultSelects() {
+  const ids = ['res-p1','res-p2','res-p3','res-p4'];
+  ids.forEach(id => {
+    const sel = document.getElementById(id);
+    const cur = sel.value;
+    sel.innerHTML = buildDriverOptions(new Set(), new Set());
+    sel.value = cur;
+  });
+  renderDNFSelect();
+  renderDNFChips();
+}
+
+function initPredictSelects() {
+  ['pred-p1','pred-p2','pred-p3','pred-p4'].forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = buildDriverOptions(new Set(), new Set());
+  });
+}
+
+// ── NAVIGATION ─────────────────────────────────────────────
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  event.target.classList.add('active');
+  render();
+}
+
+// ── RENDER ─────────────────────────────────────────────────
+function render() {
+  renderLeaderboard();
+  renderRaces();
+  renderPlayerDropdowns();
+  renderRaceDropdowns();
+  renderPlayerChips();
+  renderRacesManageList();
+  initPredictSelects();
+  initResultSelects();
+}
+
+function renderLeaderboard() {
+  const container = document.getElementById('leaderboard-container');
+  if (!state.players.length) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">🏁</div><p>No players yet. Add players in the Host panel.</p></div>`;
+    return;
+  }
+
+  const rows = state.players.map(p => ({
+    player: p,
+    pts: totalPointsForPlayer(p.id),
+    races: state.races.filter(r => r.result && state.predictions.find(pr => pr.playerId === p.id && pr.raceId === r.id)).length
+  })).sort((a, b) => b.pts - a.pts);
+
+  container.innerHTML = `
+    <table class="leaderboard-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>PLAYER</th>
+          <th>RACES</th>
+          <th>POINTS</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map((row, i) => {
+          const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+          return `<tr>
+            <td><span class="rank-badge ${rankClass}">${i+1}</span></td>
+            <td class="player-name-cell">${row.player.name}</td>
+            <td style="color:var(--muted)">${row.races}</td>
+            <td class="pts-cell">${row.pts} pts</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+function toggleRaceCard(id) {
+  const card = document.getElementById('rcard-' + id);
+  if (card) card.classList.toggle('open');
+}
+
+function renderRaces() {
+  const container = document.getElementById('races-container');
+  if (!state.races.length) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">🔮</div><p>No races recorded yet.</p></div>`;
+    return;
+  }
+
+  const sorted = [...state.races].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  container.innerHTML = `<div class="races-grid">${sorted.map(race => {
+    const hasPredictions = state.predictions.filter(p => p.raceId === race.id);
+    const positions = ['p1','p2','p3','p4'];
+    const hasResult = !!race.result;
+    const dateStr = race.date ? new Date(race.date+'T12:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : '';
+
+    const statusBadge = hasResult
+      ? `<span class="race-status-badge badge-done">✓ RESULT IN</span>`
+      : `<span class="race-status-badge badge-pending">⏳ PENDING</span>`;
+
+    // Mini top-4 preview shown in header when result exists
+    const headerPreview = hasResult
+      ? `<div style="display:flex;gap:0.3rem;flex-wrap:wrap">
+          ${positions.map((pos,i) => `<span class="pos-pill pos-${pos}" style="font-size:0.68rem;padding:0.15rem 0.5rem">P${i+1}: ${race.result[pos]}</span>`).join('')}
+        </div>`
+      : '';
+
+    let resultHTML = hasResult
+      ? `<div style="padding-top:0.8rem">
+          <div class="race-result-strip">
+            ${positions.map((pos, i) => `<span class="pos-pill pos-${pos}">P${i+1}: ${race.result[pos]}</span>`).join('')}
+            ${race.result.dnf && race.result.dnf.length ? `<span class="pos-pill" style="background:var(--red-dim);color:#ffa0a0">💥 DNF: ${race.result.dnf.join(', ')}</span>` : ''}
+          </div>
+        </div>`
+      : `<div style="padding-top:0.8rem;color:var(--muted);font-size:0.8rem;padding-bottom:0.5rem">⏳ Awaiting official result</div>`;
+
+    let predsHTML = '';
+    if (hasPredictions.length) {
+      predsHTML = hasPredictions.map(pred => {
+        const player = state.players.find(p => p.id === pred.playerId);
+        if (!player) return '';
+        const sc = race.result ? calcPoints(pred, race.result) : null;
+        if (sc) {
+          const detailHTML = sc.detail.map(d => {
+            const cls = d.type === 'exact' ? 'pts-exact' : d.type === 'inlist' ? 'pts-inlist' : d.type === 'dnf' ? 'pts-dnf' : 'pts-miss';
+            const label = d.type === 'exact' ? `+${d.pts} exact` : d.type === 'inlist' ? '+1 in list' : d.type === 'dnf' ? '💥 −1 DNF' : '✗ miss';
+            return `<div class="prediction-detail-row">
+              <span style="color:var(--muted);font-size:0.75rem;font-family:'Orbitron',sans-serif">P${['p1','p2','p3','p4'].indexOf(d.pos)+1}</span>
+              <span class="driver-pick">${d.driver}</span>
+              <span class="${cls}">${label}</span>
+            </div>`;
+          }).join('');
+          return `<div style="background:var(--surface2);border:1px solid #2a2a35;border-radius:6px;padding:0.8rem;margin-bottom:0.5rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem">
+              <strong style="font-size:0.85rem">${player.name}</strong>
+              <span class="pts-cell">${sc.total >= 0 ? '+' : ''}${sc.total} pts</span>
+            </div>
+            ${detailHTML}
+          </div>`;
+        } else {
+          return `<div class="prediction-row">
+            <span class="player">${player.name}</span>
+            <span style="color:var(--muted);font-size:0.77rem">${pred.p1} · ${pred.p2} · ${pred.p3} · ${pred.p4}</span>
+            <span class="pts-miss">pending</span>
+          </div>`;
+        }
+      }).join('');
+    } else {
+      predsHTML = `<p style="color:var(--muted);font-size:0.8rem">No predictions submitted.</p>`;
+    }
+
+    return `<div class="race-card" id="rcard-${race.id}">
+      <div class="race-card-header" onclick="toggleRaceCard('${race.id}')">
+        <div class="race-card-header-left">
+          <span class="race-name">${race.name}</span>
+          <span class="race-date">${dateStr}</span>
+          ${statusBadge}
+        </div>
+        ${headerPreview}
+        <span class="race-chevron">▼</span>
+      </div>
+      <div class="race-card-body">
+        ${resultHTML}
+        <div class="section-title" style="font-size:0.62rem;margin-bottom:0.7rem;margin-top:1rem">Predictions</div>
+        <div style="display:grid;gap:0.5rem">${predsHTML}</div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderPlayerDropdowns() {
+  const sel = document.getElementById('pred-player');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— select player —</option>' +
+    state.players.map(p => `<option value="${p.id}" ${p.id === current ? 'selected' : ''}>${p.name}</option>`).join('');
+}
+
+function renderRaceDropdowns() {
+  const openRaces = state.races.filter(r => !r.result);
+  const allRaces  = state.races;
+
+  const predSel   = document.getElementById('pred-race');
+  const resSel    = document.getElementById('result-race');
+
+  predSel.innerHTML = '<option value="">— select race —</option>' +
+    openRaces.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+  resSel.innerHTML  = '<option value="">— select race —</option>' +
+    allRaces.map(r => `<option value="${r.id}">${r.name}${r.result ? ' ✓' : ''}</option>`).join('');
+}
+
+function renderPlayerChips() {
+  const container = document.getElementById('players-list');
+  container.innerHTML = state.players.map(p =>
+    `<div class="chip">${p.name}<button class="chip-remove" onclick="removePlayer('${p.id}')" title="Remove">×</button></div>`
+  ).join('');
+}
+
+function renderRacesManageList() {
+  const container = document.getElementById('races-manage-list');
+  if (!state.races.length) {
+    container.innerHTML = `<p style="color:var(--muted);font-size:0.82rem">No races yet.</p>`;
+    return;
+  }
+  const sorted = [...state.races].sort((a, b) => new Date(a.date) - new Date(b.date));
+  container.innerHTML = `<div style="display:grid;gap:0.5rem">${sorted.map(r => `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.8rem;padding:0.55rem 0.8rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;">
+      <div>
+        <span style="font-size:0.85rem;font-weight:500">${r.name}</span>
+        ${r.date ? `<span style="color:var(--muted);font-size:0.73rem;margin-left:0.6rem">${new Date(r.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>` : ''}
+        ${r.result ? `<span style="color:var(--green);font-size:0.7rem;margin-left:0.6rem">✓ result posted</span>` : `<span style="color:var(--muted);font-size:0.7rem;margin-left:0.6rem">⏳ pending</span>`}
+      </div>
+      <button class="btn btn-danger" onclick="removeRace('${r.id}')">REMOVE</button>
+    </div>`).join('')}</div>`;
+}
+
+// ── ACTIONS ────────────────────────────────────────────────
+function addPlayer() {
+  const input = document.getElementById('new-player-name');
+  const name = input.value.trim();
+  if (!name) return;
+  if (state.players.find(p => normalize(p.name) === normalize(name))) {
+    input.value = '';
+    return;
+  }
+  state.players.push({ id: 'p_' + Date.now(), name });
+  input.value = '';
+  save(); render();
+}
+
+function removeRace(id) {
+  const race = state.races.find(r => r.id === id);
+  if (!race) return;
+  const predCount = state.predictions.filter(p => p.raceId === id).length;
+  const msg = predCount
+    ? `Remove "${race.name}"? This will also delete ${predCount} prediction(s) and cannot be undone.`
+    : `Remove "${race.name}"?`;
+  if (!confirm(msg)) return;
+  state.races = state.races.filter(r => r.id !== id);
+  state.predictions = state.predictions.filter(p => p.raceId !== id);
+  save(); render();
+}
+
+function removePlayer(id) {
+  if (!confirm('Remove this player? Their predictions will remain in race history.')) return;
+  state.players = state.players.filter(p => p.id !== id);
+  save(); render();
+}
+
+function addRace() {
+  const name = document.getElementById('new-race-name').value.trim();
+  const date = document.getElementById('new-race-date').value;
+  if (!name) return;
+  state.races.push({ id: 'r_' + Date.now(), name, date, result: null });
+  document.getElementById('new-race-name').value = '';
+  document.getElementById('new-race-date').value = '';
+  save(); render();
+}
+
+function submitPrediction() {
+  const alertEl = document.getElementById('predict-alert');
+  const playerId = document.getElementById('pred-player').value;
+  const raceId   = document.getElementById('pred-race').value;
+  const p1 = document.getElementById('pred-p1').value.trim();
+  const p2 = document.getElementById('pred-p2').value.trim();
+  const p3 = document.getElementById('pred-p3').value.trim();
+  const p4 = document.getElementById('pred-p4').value.trim();
+
+  if (!playerId || !raceId || !p1 || !p2 || !p3 || !p4) {
+    alertEl.innerHTML = `<div class="alert alert-error">Fill in all fields.</div>`; return;
+  }
+
+  const drivers = [p1, p2, p3, p4].map(normalize);
+  if (new Set(drivers).size < 4) {
+    alertEl.innerHTML = `<div class="alert alert-error">All 4 drivers must be different.</div>`; return;
+  }
+
+  const exists = state.predictions.find(pr => pr.playerId === playerId && pr.raceId === raceId);
+  if (exists) {
+    exists.p1 = p1; exists.p2 = p2; exists.p3 = p3; exists.p4 = p4;
+    alertEl.innerHTML = `<div class="alert alert-success">Prediction updated!</div>`;
+  } else {
+    state.predictions.push({ playerId, raceId, p1, p2, p3, p4 });
+    alertEl.innerHTML = `<div class="alert alert-success">Prediction locked in! 🔒</div>`;
+  }
+
+  ['pred-p1','pred-p2','pred-p3','pred-p4'].forEach(id => document.getElementById(id).value = '');
+  updateDriverSelects();
+  save();
+  setTimeout(() => { alertEl.innerHTML = ''; }, 3000);
+}
+
+function postResult() {
+  const alertEl = document.getElementById('result-alert');
+  const raceId = document.getElementById('result-race').value;
+  const p1 = document.getElementById('res-p1').value.trim();
+  const p2 = document.getElementById('res-p2').value.trim();
+  const p3 = document.getElementById('res-p3').value.trim();
+  const p4 = document.getElementById('res-p4').value.trim();
+
+  if (!raceId || !p1 || !p2 || !p3 || !p4) {
+    alertEl.innerHTML = `<div class="alert alert-error">Select a race and fill in all positions.</div>`; return;
+  }
+
+  const drivers = [p1, p2, p3, p4].map(normalize);
+  if (new Set(drivers).size < 4) {
+    alertEl.innerHTML = `<div class="alert alert-error">All 4 drivers must be different.</div>`; return;
+  }
+
+  const dnf = [...dnfDrivers];
+
+  const race = state.races.find(r => r.id === raceId);
+  race.result = { p1, p2, p3, p4, dnf };
+
+  ['res-p1','res-p2','res-p3','res-p4'].forEach(id => document.getElementById(id).value = '');
+  dnfDrivers = [];
+  renderDNFChips();
+  renderDNFSelect();
+
+  const dnfMsg = dnf.length ? ` ${dnf.length} DNF(s) recorded.` : '';
+  alertEl.innerHTML = `<div class="alert alert-success">Official result posted! Points calculated.${dnfMsg} 🏁</div>`;
+  save(); render();
+  setTimeout(() => { alertEl.innerHTML = ''; }, 4000);
+}
+
+// ── DATE CONSTRAINT: 2026 months/days only ─────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const dateInput = document.getElementById('new-race-date');
+  if (dateInput) {
+    dateInput.min = '2026-01-01';
+    dateInput.max = '2026-12-31';
+  }
+});
+
+// ── ENTER KEY ──────────────────────────────────────────────
+document.getElementById('new-player-name').addEventListener('keydown', e => { if (e.key === 'Enter') addPlayer(); });
+
+// ── BOOT ──────────────────────────────────────────────────
+load();
+render();
+</script>
+</body>
+</html>
